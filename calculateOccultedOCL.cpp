@@ -1,38 +1,28 @@
 #include"pch.h"
-using namespace std;
-using namespace eigen;
+#include <CL/cl.h>
 
-void ocl::calculateFrontJudgeOfTrigon(std::vector<eigen::TrigonPart>& trigonVct, double toleDist, double toleAngle, double toleFixed)
+using namespace std;
+
+//using OpenCL
+int ocl::calculateFrontJudgeOfTrigon(std::vector<eigen::TrigonPart>& trigonVct, double toleDist, double toleAngle, double toleFixed)
 {
-    for (int i = 0; i < trigonVct.size(); ++i)
+    cl_uint numPlatforms = 0;
+    cl_platform_id* platforms = nullptr;
+    cl_uint numDevices = 0;
+    cl_device_id* devices = nullptr;
+    cl_int result = clGetPlatformIDs(0, nullptr, &numPlatforms);
+    if (result != CL_SUCCESS) 
+        return -1;
+    platforms = new cl_platform_id[numPlatforms];
+    result = clGetPlatformIDs(numPlatforms, platforms, nullptr);
+    if (result != CL_SUCCESS) 
     {
-        TrigonPart& trigonA = trigonVct[i];
-        for (const auto& j : trigonA.m_findInter)
-        {
-            const TrigonPart& trigonB = trigonVct[j];
-            if (trigonB.m_visible == OcclusionState::HIDDEN)
-            {
-                continue; //means coverd by front trigon
-            }
-            if (trigonB.m_box3d.max().z() < trigonA.m_box3d.min().z())
-            {
-                continue;
-            }
-            if (!isTwoTrianglesIntersectSAT(trigonA.m_triangle2d, trigonB.m_triangle2d))
-            {
-                continue;
-            }
-            if (FrontState::B_FRONTOF == isFrontJudgeOfTrigon(trigonA, trigonB, toleDist, toleAngle, toleFixed))
-            {
-                if (isTriangleInsideTriangleOther(trigonA, trigonB, toleDist))
-                {
-                    trigonA.m_visible = OcclusionState::HIDDEN;
-                    break;
-                }
-                trigonA.m_visible = OcclusionState::SHIELDED;
-                trigonA.m_shielded.push_back(trigonB.m_index);
-            }
-        }
+        delete[] platforms;
+        return -1;
     }
-    //return;
+
+
+
+
+    return 0;
 }

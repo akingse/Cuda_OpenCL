@@ -405,7 +405,7 @@ int main3(int argc, char* argv[])
     return 0;
 }
 
-
+//获取设备信息
 int main4() {
     cl_uint numPlatforms = 0;
     cl_platform_id* platforms = nullptr;

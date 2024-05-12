@@ -7,6 +7,9 @@
     <Filter Include="test">
       <UniqueIdentifier>{c6ab3eb4-4563-42e3-905c-d13db9b1879c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="cl">
+      <UniqueIdentifier>{6e44827c-3a86-43d2-9db0-995eec553df7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="calculateOccultedOCL.cpp">
@@ -18,6 +21,9 @@
     <ClCompile Include="test_opencl.cpp">
       <Filter>test</Filter>
     </ClCompile>
+    <ClCompile Include="pch.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="calculateOccultedOCL.h">
@@ -26,13 +32,18 @@
     <ClInclude Include="pch.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\learn_cpp\Project_cal\clashTypeDefine.h">
-      <Filter>src</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="kernel.cu">
       <Filter>test</Filter>
     </CudaCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="test_calcl_1.cl">
+      <Filter>cl</Filter>
+    </None>
+    <None Include="calculateOccultedOCL.cl">
+      <Filter>cl</Filter>
+    </None>
   </ItemGroup>
 </Project>
