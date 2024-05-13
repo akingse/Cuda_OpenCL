@@ -5,3 +5,8 @@
 /.vs/Cuda_OpenCL/v17
 /.vs/VSWorkspaceState.json
 /x64
+/.vs/Cuda_OpenCL/FileContentIndex
+/.vs/LearnCuda/FileContentIndex
+/.vs
+/LearnCuda/x64/Debug
+/LearnOpenCL/x64/Debug
