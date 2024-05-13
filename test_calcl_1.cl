@@ -13,3 +13,8 @@ __kernel void vecAdd(  __global double *a,
         c[id] = a[id] + b[id];                                 
 }                                                              
 
+/*
+
+
+
+*/

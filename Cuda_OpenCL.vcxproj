@@ -104,6 +104,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">pch.h</PrecompiledHeaderFile>
     </ClCompile>
+    <ClCompile Include="test_opencl_2.cpp" />
     <None Include="test_calcl_3.cl">
       <FileType>Document</FileType>
     </None>

@@ -30,14 +30,9 @@ CL语言之内置函数
 
 */
 #include "pch.h"
-// OpenCL includes
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <math.h>
-#include <CL/opencl.h>
-#include <CL/cl.h>
-#pragma comment (lib, "OpenCL.lib")
+using namespace std;
 
 // OpenCL kernel. Each work item takes care of one element of c
 const char* kernelSource1 = "\n" \
@@ -62,7 +57,7 @@ const char* kernelSource3 = KERNEL(
     __kernel void Pi(__global float* workGroupBuffer, // 0..NumWorkGroups-1 
         __local float* insideWorkGroup,  // 0..workGroupSize-1 
         const uint n,        // Total iterations 
-        const uint chunk)        // Chunk size 
+        const uint chunk)        // Chunk sizeN 
 {
     const uint lid = get_local_id(0);
     const uint gid = get_global_id(0);
@@ -100,7 +95,7 @@ const char* kernelSource3 = KERNEL(
 
 //typedef double* double2;
 //typedef struct {
-//    double2 m_triangle[3];
+//    double2 triangle[3];
 //} Trigon2d;
 //
 //void add_triangle(
@@ -111,36 +106,50 @@ const char* kernelSource3 = KERNEL(
 //    int id;
 //    for (int i = 0; i < 3; i++)
 //    {
-//        C[id].m_triangle[i] = A[id].m_triangle[i] + B[id].m_triangle[i];
+//        C[id].triangle[i] = A[id].triangle[i] + B[id].triangle[i];
 //    }
 //}
-
+//typedef std::tuple<double, double> Vector2d;
+//typedef std::array<double, 2> Vector2d;
 typedef struct {
-    Eigen::Vector2d m_triangle[3];
+    Eigen::Vector2d trigon[3];
+    //cl_double2 trigon[3];
+    //Vector2d trigon[3];
 } Trigon2d;
 
 const int N = 10; //1024 // 矩阵大小
-const size_t size = N * N * sizeof(float);
+//const size_t sizeN = N * N * sizeof(float);
+const size_t sizeN = N * N * sizeof(double) * 6;
 int main1()
 {
     // 初始化输入矩阵
     float* A = new float[N * N];
     float* B = new float[N * N];
     float* C = new float[N * N];
+    vector<float> vctA(N * N);
+    vector<float> vctB(N * N);
+    //vector<float> vctC(N * N);
     for (int i = 0; i < N * N; i++)
     {
         A[i] = 1.0f * i;
         B[i] = 1.0f * i;
+        vctA[i] = 1.0f * i;
+        vctB[i] = 1.0f * i;
     }
     Trigon2d* trisA = new Trigon2d[N * N];
     Trigon2d* trisB = new Trigon2d[N * N];
     Trigon2d* trisC = new Trigon2d[N * N];
+    //std::vector<Trigon2d> trisA(N * N);
+    //std::vector<Trigon2d> trisB(N * N);
+    //std::vector<Trigon2d> trisC(N * N);
     for (int i = 0; i < N * N; i++)
     {
         for (int j = 0; j < 3; j++)
         {
-            trisA[i].m_triangle[j] = Eigen::Vector2d{ i,i };
-            trisB[i].m_triangle[j] = Eigen::Vector2d{ i,i };
+            trisA[i].trigon[j] = Eigen::Vector2d{ i,i };
+            trisB[i].trigon[j] = Eigen::Vector2d{ i,i };
+            //trisA[i].trigon[j] = array<double, 2>{ double(i),double(i) };
+            //trisB[i].trigon[j] = array<double, 2>{ double(i),double(i) };
         }
     }
 
@@ -161,26 +170,35 @@ int main1()
     clBuildProgram(program, 1, &device, NULL, NULL, NULL);
     //cl_kernel kernel = clCreateKernel(program, "add_matrices", &err);
     cl_kernel kernel = clCreateKernel(program, "add_triangle", &err);
-
+    if (kernel == nullptr)
+        return -1;
     // 创建OpenCL内存缓冲区
-    cl_mem bufferA = clCreateBuffer(context, CL_MEM_READ_ONLY, size, NULL, NULL);
-    cl_mem bufferB = clCreateBuffer(context, CL_MEM_READ_ONLY, size, NULL, NULL);
-    cl_mem bufferC = clCreateBuffer(context, CL_MEM_WRITE_ONLY, size, NULL, NULL);
+    cl_mem bufferA = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeN, NULL, NULL);
+    cl_mem bufferB = clCreateBuffer(context, CL_MEM_READ_ONLY, sizeN, NULL, NULL);
+    cl_mem bufferC = clCreateBuffer(context, CL_MEM_WRITE_ONLY, sizeN, NULL, NULL);
     // 将输入数据传输到OpenCL缓冲区
-    clEnqueueWriteBuffer(queue, bufferA, CL_TRUE, 0, size, trisA, 0, NULL, NULL);
-    clEnqueueWriteBuffer(queue, bufferB, CL_TRUE, 0, size, trisB, 0, NULL, NULL);
+    //clEnqueueWriteBuffer(queue, bufferA, CL_TRUE, 0, sizeN, vctA.data(), 0, NULL, NULL);
+    //clEnqueueWriteBuffer(queue, bufferB, CL_TRUE, 0, sizeN, vctB.data(), 0, NULL, NULL);
+    clEnqueueWriteBuffer(queue, bufferA, CL_TRUE, 0, sizeN, trisA, 0, NULL, NULL);
+    clEnqueueWriteBuffer(queue, bufferB, CL_TRUE, 0, sizeN, trisB, 0, NULL, NULL);
     // 设置OpenCL内核参数
     clSetKernelArg(kernel, 0, sizeof(cl_mem), &bufferA);
     clSetKernelArg(kernel, 1, sizeof(cl_mem), &bufferB);
     clSetKernelArg(kernel, 2, sizeof(cl_mem), &bufferC);
 
+    //规定每个work-group 中work-item的数量为64
+    size_t localSize = 100;// 64;
+    // 计算所占用的work group块的所有空间大小
+    size_t globalSize = ceil(N * N / (float)localSize) * localSize;// work-group 的数量用ceil函数向上取整求得n/localsize, 然后再乘上localsize就时globalsize
     // 启动内核
-    size_t globalWorkSize[2] = { N * N, N * N };
-    clEnqueueNDRangeKernel(queue, kernel, 2, NULL, globalWorkSize, NULL, 0, NULL, NULL);
-
+    //size_t globalWorkSize[2] = { N * N, N * N };
+    //clEnqueueNDRangeKernel(queue, kernel, 2, NULL, globalWorkSize, NULL, 0, NULL, NULL);
+    clEnqueueNDRangeKernel(queue, kernel, 1, NULL, &globalSize, &localSize, 0, NULL, NULL);
+    // 等待命令队列中的任务执行完毕
+    clFinish(queue);
     // 读取结果数据
-    clEnqueueReadBuffer(queue, bufferC, CL_TRUE, 0, size, C, 0, NULL, NULL);
-    clEnqueueReadBuffer(queue, bufferC, CL_TRUE, 0, size, trisC, 0, NULL, NULL);
+    //clEnqueueReadBuffer(queue, bufferC, CL_TRUE, 0, sizeN, C, 0, NULL, NULL);
+    clEnqueueReadBuffer(queue, bufferC, CL_TRUE, 0, sizeN, trisC, 0, NULL, NULL);
 
     // 清理OpenCL资源
     clReleaseMemObject(bufferA);
@@ -194,7 +212,15 @@ int main1()
     // 打印结果
     std::vector<float> addResult(N * N);
     for (int i = 0; i < N * N; i++)
+    {
+        //vctA[i] = A[i];
+        //vctB[i] = B[i];
         addResult[i] = C[i];
+        //cout
+        cout << "(" << trisC[i].trigon[0][0] << "," << trisC[i].trigon[0][1] << ")" << 
+                "(" << trisC[i].trigon[1][0] << "," << trisC[i].trigon[1][1] << ")" << 
+                "(" << trisC[i].trigon[2][0] << "," << trisC[i].trigon[2][1] << ")" << endl;
+    }
     //std::cout << "Result: " << A[0] << std::endl;
     delete[] A;
     delete[] B;
@@ -381,17 +407,6 @@ int main3()
     return 0;
 }
 
-class OCL
-{
-public:
-    cl_platform_id platform;          // OpenCL 平台
-    cl_device_id device_id;           // 设备的ID
-    cl_context context;               // 上下文
-    cl_command_queue queue;           // 命令队列
-    cl_program program;               // 程序
-    cl_kernel kernel;                 // 核函数
-};
-
 //获取设备信息
 int main4()
 {
@@ -439,7 +454,7 @@ int main4()
             size_t vendorStringSize = 0;
             result = clGetDeviceInfo(devices[j], CL_DEVICE_VENDOR, 0, nullptr, &vendorStringSize);
             if (result != CL_SUCCESS) {
-                std::cerr << "Failed to get vendor string size." << std::endl;
+                std::cerr << "Failed to get vendor string sizeN." << std::endl;
                 continue;
             }
             char* vendorString = new char[vendorStringSize];
@@ -483,9 +498,6 @@ int main4()
     delete[] platforms;
     return 0;
 }
-
-
-
 
 static int _enrol = []()
     {

@@ -24,6 +24,9 @@
     <ClCompile Include="pch.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="test_opencl_2.cpp">
+      <Filter>test</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="calculateOccultedOCL.h">
