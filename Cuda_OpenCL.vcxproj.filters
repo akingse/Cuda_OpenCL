@@ -32,6 +32,9 @@
     <ClInclude Include="pch.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="commonTypeDefine.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="kernel.cu">
@@ -43,6 +46,12 @@
       <Filter>cl</Filter>
     </None>
     <None Include="calculateOccultedOCL.cl">
+      <Filter>cl</Filter>
+    </None>
+    <None Include="test_calcl_2.cl">
+      <Filter>cl</Filter>
+    </None>
+    <None Include="test_calcl_3.cl">
       <Filter>cl</Filter>
     </None>
   </ItemGroup>

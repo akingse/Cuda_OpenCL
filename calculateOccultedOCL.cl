@@ -38,11 +38,11 @@ __kernel void vecAdd(  __global double *a,
 
 struct Trigon2d
 {
-    double2 m_triangle[3]
+    double2 m_triangle[3];
 };
 struct Trigon3d
 {
-    double3 m_triangle[3]
+    double3 m_triangle[3];
 };
 
 const double DBL_MAX = 1e308;

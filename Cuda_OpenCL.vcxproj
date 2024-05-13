@@ -104,15 +104,20 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">pch.h</PrecompiledHeaderFile>
     </ClCompile>
+    <None Include="test_calcl_3.cl">
+      <FileType>Document</FileType>
+    </None>
     <ClCompile Include="test_opencl.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="calculateOccultedOCL.h" />
+    <ClInclude Include="commonTypeDefine.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="calculateOccultedOCL.cl" />
     <None Include="test_calcl_1.cl" />
+    <None Include="test_calcl_2.cl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
