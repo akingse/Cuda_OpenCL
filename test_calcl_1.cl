@@ -1,5 +1,7 @@
-#pragma OPENCL EXTENSION cl_khr_fp64 : enable      
-           
+// to using double
+#ifdef FP64
+#pragma OpenCL EXTENSION cl_khr_fp64 : enable
+#endif   
 __kernel void vecAdd(  __global double *a,                    
                        __global double *b,                    
                        __global double *c,                    
@@ -14,7 +16,8 @@ __kernel void vecAdd(  __global double *a,
 }                                                              
 
 /*
-
+每个内核函数的声明都以__kernel或者kernel开头；
+内核函数的返回类型必须是void类型；
 
 
 */
