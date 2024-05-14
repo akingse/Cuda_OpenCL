@@ -77,7 +77,20 @@
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <CudaCompile Include="add.cu" />
+    <CudaCompile Include="async.cu" />
+    <CudaCompile Include="bandwidthtest.cu" />
     <CudaCompile Include="kernel.cu" />
+    <CudaCompile Include="profile.cu" />
+    <CudaCompile Include="Querying.cu" />
+    <CudaCompile Include="saxpy.cu" />
+    <CudaCompile Include="Stream_test.cu" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="commonTypeDefine.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="commonTypeDefine.cu" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
