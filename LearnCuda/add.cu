@@ -2,6 +2,11 @@
 #include "device_launch_parameters.h"
 #include <iostream>
 #include <math.h>
+
+//凡是挂有“__global__”或者“__device__”前缀的函数，都是在GPU上运行的设备程序，不同的是__global__设备程序可被主机程序调用，而__device__设备程序则只能被设备程序调用。
+//没有挂任何前缀的函数，都是主机程序。主机程序显示声明可以用__host__前缀
+
+
  //Kernel function to add the elements of two arrays
 __global__
 void add(int n, float* x, float* y)
@@ -26,7 +31,16 @@ void add(int n, float* x, float* y)
 
 int main1(void)
 {
-    int N = 1 << 20;
+    cudaError_t cudaStatus;
+    int num = 0;
+    cudaDeviceProp prop;
+    cudaStatus = cudaGetDeviceCount(&num);
+    for (int i = 0; i < num; i++)
+    {
+        cudaGetDeviceProperties(&prop, i);
+    }
+
+    int N = 10000;
     float* x, * y;
 
     // Allocate Unified Memory – accessible from CPU or GPU
@@ -59,3 +73,9 @@ int main1(void)
 
     return 0;
 }
+
+static int _enrol = []()
+    {
+        main1();
+        return 0;
+    }();

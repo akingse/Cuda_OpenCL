@@ -3,6 +3,8 @@
 #include "device_launch_parameters.h"
 
 #include <stdio.h>
+#include <vector>
+#include <iostream>
 
 cudaError_t addWithCuda(int *c, const int *a, const int *b, unsigned int size);
 
@@ -12,7 +14,7 @@ __global__ void addKernel(int *c, const int *a, const int *b)
     c[i] = a[i] + b[i];
 }
 
-int main()
+int main_cu()
 {
     const int arraySize = 5;
     const int a[arraySize] = { 1, 2, 3, 4, 5 };
@@ -47,6 +49,7 @@ cudaError_t addWithCuda(int *c, const int *a, const int *b, unsigned int size)
     int *dev_b = 0;
     int *dev_c = 0;
     cudaError_t cudaStatus;
+    std::vector<int> addResult(size);
 
     // Choose which GPU to run on, change this on a multi-GPU system.
     cudaStatus = cudaSetDevice(0);
@@ -116,6 +119,16 @@ Error:
     cudaFree(dev_c);
     cudaFree(dev_a);
     cudaFree(dev_b);
-    
+    for (int i = 0; i < size; i++)
+    {
+        addResult[i] = c[i];
+        std::cout << c[i] << std::endl;
+    }
     return cudaStatus;
 }
+
+int main()
+{
+    return 0;
+}
+
