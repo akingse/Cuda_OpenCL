@@ -31,6 +31,9 @@
     <CudaCompile Include="test_triangle.cu">
       <Filter>test</Filter>
     </CudaCompile>
+    <CudaCompile Include="calculateOccultedCuda.cpp">
+      <Filter>src</Filter>
+    </CudaCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="test">
@@ -47,10 +50,5 @@
     <ClInclude Include="calculateOccultedCuda.h">
       <Filter>src</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="calculateOccultedCuda.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
   </ItemGroup>
 </Project>

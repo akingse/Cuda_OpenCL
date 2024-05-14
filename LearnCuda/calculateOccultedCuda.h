@@ -38,18 +38,17 @@ namespace cuda
 
     struct TrigonPart
     {
-        long long m_index;
+        int m_index;
         OcclusionState m_visible = OcclusionState::EXPOSED;
-        double m_area = -1;
         Eigen::AlignedBox3d m_box3d;
         Eigen::AlignedBox2d m_box2d;
         Eigen::Vector3d m_normal; //normal of m_triangle3d, always upward
         Triangle3d m_triangle3d;
         Triangle2d m_triangle2d;
-        std::vector<size_t> m_findInter;
-        std::vector<long long> m_shielded; //index
+        int* m_occ_ptr;
+        size_t m_occ_size;
     };
 
-    int calculateFrontJudgeOfTrigon();
+    int calculateFrontJudgeOfTrigon(std::vector<TrigonPart>& trigonVct, double toleDist, double toleAngle, double toleFixed);
 
 }
