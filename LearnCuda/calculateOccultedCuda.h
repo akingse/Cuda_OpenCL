@@ -45,8 +45,8 @@ namespace cuda
         Eigen::Vector3d m_normal; //normal of m_triangle3d, always upward
         Triangle3d m_triangle3d;
         Triangle2d m_triangle2d;
-        int* m_occ_ptr;
         size_t m_occ_size;
+        int* m_occ_ptr;
     };
 
     int calculateFrontJudgeOfTrigon(std::vector<TrigonPart>& trigonVct, double toleDist, double toleAngle, double toleFixed);

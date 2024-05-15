@@ -41,10 +41,10 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>C:\Users\Aking\source\repos\TPL\eigen-3.4.0;D:\Alluser\akingse\repos\learn_cpp\Project_cal;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Users\Aking\source\repos\TPL\eigen-3.4.0;D:\Alluser\akingse\repos\learn_cpp\Project_cal;C:\Users\wangk\source\repos\TPL\eigen-3.4.0;C:\Users\wangk\source\repos\learn_cpp\Project_cal;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>C:\Users\Aking\source\repos\TPL\eigen-3.4.0;D:\Alluser\akingse\repos\learn_cpp\Project_cal;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Users\Aking\source\repos\TPL\eigen-3.4.0;D:\Alluser\akingse\repos\learn_cpp\Project_cal;C:\Users\wangk\source\repos\TPL\eigen-3.4.0;C:\Users\wangk\source\repos\learn_cpp\Project_cal;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>

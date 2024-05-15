@@ -22,9 +22,6 @@
     <CudaCompile Include="Stream_test.cu">
       <Filter>test</Filter>
     </CudaCompile>
-    <CudaCompile Include="kernel.cu">
-      <Filter>src</Filter>
-    </CudaCompile>
     <CudaCompile Include="commonTypeDefine.cu">
       <Filter>src</Filter>
     </CudaCompile>
@@ -33,6 +30,9 @@
     </CudaCompile>
     <CudaCompile Include="calculateOccultedCuda.cpp">
       <Filter>src</Filter>
+    </CudaCompile>
+    <CudaCompile Include="kernel.cu">
+      <Filter>test</Filter>
     </CudaCompile>
   </ItemGroup>
   <ItemGroup>

@@ -50,7 +50,6 @@ __device__ bool isTriangleInsideTriangleOther(const TrigonPart& triA, const Trig
 	return true;
 }
 
-//__device__ bool isTwoSegmentsIntersect(const Vector2d segmA[2], const Vector2d segmB[2], double tolerance)
 __device__ bool isTwoSegmentsIntersect(const Vector2d segmA[2], const Vector2d segmB[2], double tolerance)
 {
 	//tole<0 less judge, tole>0 more judge
@@ -188,7 +187,7 @@ __device__ FrontState isFrontJudgeOfTrigon(const TrigonPart& trigonA, const Trig
 	return FrontState::UNKNOWN; //error, not intersect
 }
 
-__global__ void cuda_calculateFrontJudgeOfTrigon(TrigonPart* trigonVct, double toleDist, double toleAngle, double toleFixed)
+__global__ void kernel_calculateFrontJudgeOfTrigon(TrigonPart* trigonVct, double toleDist, double toleAngle, double toleFixed)
 {
 	int i = threadIdx.x;
 	TrigonPart& trigonA = trigonVct[i];
@@ -219,12 +218,27 @@ __global__ void cuda_calculateFrontJudgeOfTrigon(TrigonPart* trigonVct, double t
 
 int cuda::calculateFrontJudgeOfTrigon(std::vector<TrigonPart>& trigonVct, double toleDist, double toleAngle, double toleFixed)
 {
-	TrigonPart* ptr = trigonVct.data();
-	cudaMallocManaged(&ptr, sizeof(trigonVct) + 3 * sizeof(double));
-    cuda_calculateFrontJudgeOfTrigon << <1, trigonVct.size() >> > (trigonVct.data(), toleDist, toleAngle, toleFixed);
-	cudaDeviceSynchronize();
-	//cudaError_t cudaStatus = cudaMemcpy( , cudaMemcpyDeviceToHost);
+	std::vector<int> a;
+	TrigonPart* device;
+	size_t size = sizeof(TrigonPart) + 3 * sizeof(double);
+	for (const auto& iter : trigonVct)
+		size += sizeof(int) * iter.m_occ_size;
+	cudaMallocManaged(&device, size);
+	for (int i = 0; i < trigonVct.size(); ++i)
+	{
+		//cudaMallocManaged(&(devData[i].variableLengthData), hostData[i].variableLengthData.size() * sizeof(int));
+		//cudaMemcpy(devData[i].variableLengthData, 
+		//	hostData[i].variableLengthData.data(),
+		//	hostData[i].variableLengthData.size() * sizeof(int), 
+		//	cudaMemcpyHostToDevice);
 
+	}
+	//cudaMemcpy(device, trigonVct.data(), size, cudaMemcpyHostToDevice);
+	//kernelName<<< grid_size, block_size >>>( ... );
+	kernel_calculateFrontJudgeOfTrigon << <1, trigonVct.size() >> > (device, toleDist, toleAngle, toleFixed);
+	cudaDeviceSynchronize();
+	cudaMemcpy(trigonVct.data(), device, size, cudaMemcpyDeviceToHost);
+	cudaFree(device);
     return 0;
 }
 
@@ -278,8 +292,8 @@ void test_cuda()
 		Eigen::Vector3d(0,0,1),
 		triA3,
 		triA2,
+		m_shieldedA.size(),
 		m_shieldedA.data(),
-		m_shieldedA.size()
 	};
 	TrigonPart trigonB = {
 		1,
@@ -289,8 +303,8 @@ void test_cuda()
 		Eigen::Vector3d(0,0,1),
 		triB3,
 		triB2,
+		m_shieldedB.size(),
 		m_shieldedB.data(),
-		m_shieldedB.size()
 	};
 	std::vector<TrigonPart> trigonVct = { trigonA ,trigonB };
 	calculateFrontJudgeOfTrigon(trigonVct, 0, 0, 0);
@@ -299,7 +313,7 @@ void test_cuda()
 
 static int _enrol = []()
 	{
-		test_cuda();
+		//test_cuda();
 		return 0;
 	}();
 

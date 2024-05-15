@@ -1,11 +1,31 @@
 ﻿#include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 #include <iostream>
+#include <vector>
 #include <math.h>
 
 //凡是挂有“__global__”或者“__device__”前缀的函数，都是在GPU上运行的设备程序，不同的是__global__设备程序可被主机程序调用，而__device__设备程序则只能被设备程序调用。
 //没有挂任何前缀的函数，都是主机程序。主机程序显示声明可以用__host__前缀
 
+/*
+
+cuda程序会使用gpu和cpu内存
+2.cpu内存释放与分配是标准的
+    1）栈，自动分配的
+    2）堆：用户自己分配释放的，如new，delete，malloc，free等
+
+3.gpu内存分配
+    1) cudaMalloc(void**devPtr , size_t size)
+    2) cudafree(void*devPtr)
+
+4.gpu,cpu都可以访问的内存,统一内存
+    1)  cudaMallocManaged(void**devPtr , size_t size)
+    2)  cudafree(void*devPtr)
+
+5.gpu内存拷贝
+cudaMemcpy(depth_vec.data, depth_in, depthWidth * depthHeight * sizeof(float), cudaMemcpyDeviceToHost);
+
+*/
 
  //Kernel function to add the elements of two arrays
 __global__
@@ -72,6 +92,49 @@ int main1(void)
     cudaFree(y);
 
     return 0;
+}
+
+struct MyClass
+{
+    std::vector<int> data;
+    //size_t size;
+    //int* ptr;
+};
+
+static int main2(void)
+{
+    std::vector<int> h_b;
+    int* d_a;
+    cudaMalloc((void**)&d_a, sizeof(int) * h_b.size());
+    cudaMemcpy(d_a, h_b.data(), sizeof(int) * h_b.size(), cudaMemcpyHostToDevice);
+
+    return 0;
+}
+
+static int main3(void)
+{
+    using namespace std;
+    vector<vector<int>> b;
+    int** a_2d = new int* [b.size()];
+    int** a_2d_Cu;
+    for (int i = 0; i < b.size(); i++)
+    {
+        int* dev_1d;
+        int length = b[i].size();
+        cudaMalloc((void**)&dev_1d, sizeof(int) * length);//该指针指向的是一个float数组
+        cudaMemcpy(dev_1d, &b[i][0], sizeof(int) * length, cudaMemcpyHostToDevice);
+    }
+    cudaMalloc((void**)&a_2d_Cu, sizeof(int*) * b.size());
+    cudaMemcpy(a_2d_Cu, a_2d, sizeof(int*) * b.size(), cudaMemcpyHostToDevice);
+
+
+    int** c = new int* [b.size()];
+    cudaMemcpy(c, b.data(), sizeof(int*) * b.size(), cudaMemcpyDeviceToHost);
+    for (int i = 0; i < b.size(); i++) {
+        int* c_i = new int[b[i].size()];
+        cudaMemcpy(c_i, b[i].data(), sizeof(int) * b[i].size(), cudaMemcpyDeviceToHost);
+        c[i] = c_i;
+    }
 }
 
 static int _enrol = []()
