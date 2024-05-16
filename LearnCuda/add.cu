@@ -107,34 +107,7 @@ static int main2(void)
     int* d_a;
     cudaMalloc((void**)&d_a, sizeof(int) * h_b.size());
     cudaMemcpy(d_a, h_b.data(), sizeof(int) * h_b.size(), cudaMemcpyHostToDevice);
-
     return 0;
-}
-
-static int main3(void)
-{
-    using namespace std;
-    vector<vector<int>> b;
-    int** a_2d = new int* [b.size()];
-    int** a_2d_Cu;
-    for (int i = 0; i < b.size(); i++)
-    {
-        int* dev_1d;
-        int length = b[i].size();
-        cudaMalloc((void**)&dev_1d, sizeof(int) * length);//该指针指向的是一个float数组
-        cudaMemcpy(dev_1d, &b[i][0], sizeof(int) * length, cudaMemcpyHostToDevice);
-    }
-    cudaMalloc((void**)&a_2d_Cu, sizeof(int*) * b.size());
-    cudaMemcpy(a_2d_Cu, a_2d, sizeof(int*) * b.size(), cudaMemcpyHostToDevice);
-
-
-    int** c = new int* [b.size()];
-    cudaMemcpy(c, b.data(), sizeof(int*) * b.size(), cudaMemcpyDeviceToHost);
-    for (int i = 0; i < b.size(); i++) {
-        int* c_i = new int[b[i].size()];
-        cudaMemcpy(c_i, b[i].data(), sizeof(int) * b[i].size(), cudaMemcpyDeviceToHost);
-        c[i] = c_i;
-    }
 }
 
 static int _enrol = []()

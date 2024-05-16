@@ -187,12 +187,17 @@ __device__ FrontState isFrontJudgeOfTrigon(const TrigonPart& trigonA, const Trig
 	return FrontState::UNKNOWN; //error, not intersect
 }
 
-__global__ void kernel_calculateFrontJudgeOfTrigon(TrigonPart* trigonVct, double toleDist, double toleAngle, double toleFixed)
+__global__ void kernel_calculateFrontJudgeOfTrigon(TrigonPart* trigonVct, size_t n, double toleDist, double toleAngle, double toleFixed)
 {
 	int i = threadIdx.x;
 	TrigonPart& trigonA = trigonVct[i];
     for (size_t j = 0; j < trigonA.m_occ_size; ++j)
     {
+		if (n <= trigonA.m_occ_ptr[j])
+		{
+			trigonA.m_occ_ptr[j] = -1;
+			continue;
+		}
         const TrigonPart& trigonB = trigonVct[trigonA.m_occ_ptr[j]];
         if (trigonB.m_visible == OcclusionState::HIDDEN ||
             trigonB.m_box3d.max().z() < trigonA.m_box3d.min().z() ||
@@ -210,7 +215,8 @@ __global__ void kernel_calculateFrontJudgeOfTrigon(TrigonPart* trigonVct, double
             }
             trigonA.m_visible = OcclusionState::SHIELDED;
             //trigonA.m_shielded.push_back(trigonB.m_index);
-        }
+			continue;
+		}
 		//unknown
 		trigonA.m_occ_ptr[j] = -1;
     }
@@ -218,26 +224,42 @@ __global__ void kernel_calculateFrontJudgeOfTrigon(TrigonPart* trigonVct, double
 
 int cuda::calculateFrontJudgeOfTrigon(std::vector<TrigonPart>& trigonVct, double toleDist, double toleAngle, double toleFixed)
 {
-	std::vector<int> a;
 	TrigonPart* device;
-	size_t size = sizeof(TrigonPart) + 3 * sizeof(double);
+	size_t size = sizeof(TrigonPart) + 4 * sizeof(double);
 	for (const auto& iter : trigonVct)
 		size += sizeof(int) * iter.m_occ_size;
-	cudaMallocManaged(&device, size);
-	for (int i = 0; i < trigonVct.size(); ++i)
-	{
-		//cudaMallocManaged(&(devData[i].variableLengthData), hostData[i].variableLengthData.size() * sizeof(int));
-		//cudaMemcpy(devData[i].variableLengthData, 
-		//	hostData[i].variableLengthData.data(),
-		//	hostData[i].variableLengthData.size() * sizeof(int), 
-		//	cudaMemcpyHostToDevice);
-
-	}
+	cudaMallocManaged(&device, size); //shared memory
+	//for (int i = 0; i < trigonVct.size(); ++i)
+	//{
+	//	//cudaMallocManaged(&(devData[i].variableLengthData), hostData[i].variableLengthData.size() * sizeof(int));
+	//	//cudaMemcpy(devData[i].variableLengthData, 
+	//	//	hostData[i].variableLengthData.data(),
+	//	//	hostData[i].variableLengthData.size() * sizeof(int), 
+	//	//	cudaMemcpyHostToDevice);
+	//}
 	//cudaMemcpy(device, trigonVct.data(), size, cudaMemcpyHostToDevice);
+	
+	//copy in
+	for (int i = 0; i < trigonVct.size(); i++)
+	{
+		device[i] = trigonVct[i];
+		size_t count = trigonVct[i].m_occ_size * sizeof(int);
+		cudaMalloc((void**)&device[i].m_occ_ptr, count);
+		cudaMemcpy(device[i].m_occ_ptr, trigonVct[i].m_occ_ptr, count, cudaMemcpyHostToDevice);
+	}
 	//kernelName<<< grid_size, block_size >>>( ... );
-	kernel_calculateFrontJudgeOfTrigon << <1, trigonVct.size() >> > (device, toleDist, toleAngle, toleFixed);
+	kernel_calculateFrontJudgeOfTrigon << <1, trigonVct.size() >> > (device, trigonVct.size(), toleDist, toleAngle, toleFixed);
 	cudaDeviceSynchronize();
-	cudaMemcpy(trigonVct.data(), device, size, cudaMemcpyDeviceToHost);
+	//cudaMemcpy(trigonVct.data(), device, size, cudaMemcpyDeviceToHost);
+	//copy out
+	//size_t count = 0;
+	for (int i = 0; i < trigonVct.size(); i++)
+	{
+		//count += sizeof(TrigonPart);
+		size_t count = trigonVct[i].m_occ_size * sizeof(int);
+		cudaMemcpy(trigonVct[i].m_occ_ptr, device[i].m_occ_ptr, count, cudaMemcpyDeviceToHost);
+		//cudaFree(&device[i]);
+	}
 	cudaFree(device);
     return 0;
 }
@@ -260,7 +282,7 @@ Eigen::AlignedBox2d getBox(const Triangle2d triangle)
 
 void test_cuda()
 {
-	std::vector<int> m_shieldedA = { 1 };
+	std::vector<int> m_shieldedA = { 1,2 };
 	std::vector<int> m_shieldedB = { 0 };
 	Triangle2d triA2 = {
 		Vector2d{0,0},
@@ -309,11 +331,12 @@ void test_cuda()
 	std::vector<TrigonPart> trigonVct = { trigonA ,trigonB };
 	calculateFrontJudgeOfTrigon(trigonVct, 0, 0, 0);
 
+	return;
 }
 
 static int _enrol = []()
 	{
-		//test_cuda();
+		test_cuda();
 		return 0;
 	}();
 

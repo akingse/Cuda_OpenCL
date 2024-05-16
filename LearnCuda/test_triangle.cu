@@ -158,25 +158,26 @@ static void test_vector()
 
 	MyClass* devData;
 	size_t c_size = size * sizeof(MyClass);
-	//for (int i = 0; i < size; i++)
-	//	c_size += hostData[i].size * sizeof(int);
+	for (int i = 0; i < size; i++)
+		c_size += hostData[i].size * sizeof(int);
 	cudaMallocManaged(&devData, c_size);
 
 	for (int i = 0; i < size; ++i) 
 	{
-		cudaMallocManaged(&devData, hostData[i].size * sizeof(int));
+		//cudaMallocManaged(&devData, hostData[i].size * sizeof(int));
+		cudaMalloc((void**)&devData[i], hostData[i].size * sizeof(int));
 		cudaMemcpy(devData, hostData[i].ptr, hostData[i].size * sizeof(int), cudaMemcpyHostToDevice);
 	}
 	variable_length << <1, size >> > (devData);
 	cudaDeviceSynchronize();
 	//cudaMemcpy(trigonVct.data(), device, size, cudaMemcpyDeviceToHost);
 	cudaFree(devData);
-	
 }
+
 
 static int _enrol = []()
     {
         //test_triangle();
-		test_vector();
+		//test_vector();
         return 0;
     }();
