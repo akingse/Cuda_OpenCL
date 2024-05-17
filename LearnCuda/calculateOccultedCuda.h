@@ -1,28 +1,34 @@
 #pragma once
+#include "clashTypeDefine.h"
+#ifdef CAL_DLLEXPORT_CUDA
+#define DLLEXPORT_CAL_CUDA __declspec(dllexport)
+#else
+#define DLLEXPORT_CAL_CUDA __declspec(dllimport)
+#endif
 
 namespace cuda
 {
-    enum class OcclusionState :int //means cover
-    {
-        EXPOSED = 0,
-        HIDDEN,
-        SHIELDED, //shielded by other triangle
-        COPLANAR, //COPLANAR with other-triangle
-        INTERSECT, //ignore
-        OCCLUSION, //shielded+intersect
-        DEGENERACY, // become segment
-        UNKNOWN,
-    };
+    //enum class OcclusionState :int //means cover
+    //{
+    //    EXPOSED = 0,
+    //    HIDDEN,
+    //    SHIELDED, //shielded by other triangle
+    //    COPLANAR, //COPLANAR with other-triangle
+    //    INTERSECT, //ignore
+    //    OCCLUSION, //shielded+intersect
+    //    DEGENERACY, // become segment
+    //    UNKNOWN,
+    //};
 
-    enum class FrontState :int
-    {
-        // state of 3d trigon, all 2d projection penetration
-        COPLANAR = 0, //and intersect
-        A_FRONTOF,
-        B_FRONTOF,
-        INTERSECT, //3d intersect
-        UNKNOWN,
-    };
+    //enum class FrontState :int
+    //{
+    //    // state of 3d trigon, all 2d projection penetration
+    //    COPLANAR = 0, //and intersect
+    //    A_FRONTOF,
+    //    B_FRONTOF,
+    //    INTERSECT, //3d intersect
+    //    UNKNOWN,
+    //};
 
     typedef struct {
         Eigen::Vector2d data[3];
@@ -49,6 +55,6 @@ namespace cuda
         int* m_occ_ptr;
     };
 
-    int calculateFrontJudgeOfTrigon(std::vector<TrigonPart>& trigonVct, double toleDist, double toleAngle, double toleFixed);
+    int calculateFrontJudgeOfTrigon(std::vector<eigen::TrigonPart>& trigonVct, double toleDist, double toleAngle, double toleFixed);
 
 }

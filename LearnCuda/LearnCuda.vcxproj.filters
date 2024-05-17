@@ -28,10 +28,13 @@
     <CudaCompile Include="test_triangle.cu">
       <Filter>test</Filter>
     </CudaCompile>
-    <CudaCompile Include="calculateOccultedCuda.cpp">
+    <CudaCompile Include="calculateOccultedCuda.cu">
       <Filter>src</Filter>
     </CudaCompile>
     <CudaCompile Include="kernel.cu">
+      <Filter>test</Filter>
+    </CudaCompile>
+    <CudaCompile Include="test_front_judge.cu">
       <Filter>test</Filter>
     </CudaCompile>
   </ItemGroup>
@@ -48,6 +51,9 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="calculateOccultedCuda.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="pch.h">
       <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>

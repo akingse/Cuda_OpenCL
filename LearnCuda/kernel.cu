@@ -14,7 +14,7 @@ __global__ void addKernel(int *c, const int *a, const int *b)
     c[i] = a[i] + b[i];
 }
 
-int main()
+int main0()
 {
     const int arraySize = 5;
     const int a[arraySize] = { 1, 2, 3, 4, 5 };
@@ -127,8 +127,8 @@ Error:
     return cudaStatus;
 }
 
-//int main()
-//{
-//    return 0;
-//}
+int main()
+{
+    return 0;
+}
 

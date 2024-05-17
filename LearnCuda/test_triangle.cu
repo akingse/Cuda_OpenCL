@@ -174,7 +174,6 @@ static void test_vector()
 	cudaFree(devData);
 }
 
-
 static int _enrol = []()
     {
         //test_triangle();
