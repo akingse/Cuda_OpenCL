@@ -116,64 +116,6 @@ static void test_triangle()
 	return;
 }
 
-struct MyClass 
-{
-	//std::vector<int> data;
-	size_t size;
-	int* ptr;
-	std::vector<int> to_vector() const
-	{
-		std::vector<int> data(size);
-		for (int i = 0; i < size; i++)
-			data[i] = ptr[i];
-		return data;
-	}
-};
-
-__global__ void variable_length(MyClass* varray)
-{
-	int i = threadIdx.x;
-	MyClass& arr = varray[i];
-	int k;
-	for (int j = 0; j < arr.size; j++)
-		k = arr.ptr[i];
-
-	return;
-}
-
-static void test_vector()
-{
-	size_t size = 10;
-	std::vector<MyClass> hostData(size);
-	for (int i = 0; i < size; i++)
-	{
-		//std::vector<int> temp;
-		int* temp = new int[i];
-		for (int j = 0; j < i; j++)
-			temp[j] = i;
-		//hostData[i].data = temp;
-		hostData[i].size = i;
-		hostData[i].ptr = temp;
-	}
-
-	MyClass* devData;
-	size_t c_size = size * sizeof(MyClass);
-	for (int i = 0; i < size; i++)
-		c_size += hostData[i].size * sizeof(int);
-	cudaMallocManaged(&devData, c_size);
-
-	for (int i = 0; i < size; ++i) 
-	{
-		//cudaMallocManaged(&devData, hostData[i].size * sizeof(int));
-		cudaMalloc((void**)&devData[i], hostData[i].size * sizeof(int));
-		cudaMemcpy(devData, hostData[i].ptr, hostData[i].size * sizeof(int), cudaMemcpyHostToDevice);
-	}
-	variable_length << <1, size >> > (devData);
-	cudaDeviceSynchronize();
-	//cudaMemcpy(trigonVct.data(), device, size, cudaMemcpyDeviceToHost);
-	cudaFree(devData);
-}
-
 static int _enrol = []()
     {
         //test_triangle();

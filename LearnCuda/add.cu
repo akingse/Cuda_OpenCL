@@ -112,6 +112,6 @@ static int main2(void)
 
 static int _enrol = []()
     {
-        main1();
+        //main1();
         return 0;
     }();

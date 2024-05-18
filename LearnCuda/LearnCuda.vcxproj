@@ -79,9 +79,14 @@
     </Link>
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
+      <HostDebugInfo>true</HostDebugInfo>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>Od</Optimization>
     </CudaCompile>
     <CudaLink>
       <Optimization>Od</Optimization>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <GPUDebugInfo>true</GPUDebugInfo>
     </CudaLink>
   </ItemDefinitionGroup>
   <ItemGroup>

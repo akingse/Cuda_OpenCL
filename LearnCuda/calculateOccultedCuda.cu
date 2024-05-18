@@ -166,6 +166,7 @@ __device__ FrontState isFrontJudgeOfTrigon(const cuda::TrigonPart& trigonA, cons
 			int j1 = (j + 1) % 3;
 			segm2B[0] = trigonB.m_triangle2d.data[j];
 			segm2B[1] = trigonB.m_triangle2d.data[j1];
+			vect3B = trigonB.m_triangle3d.data[j1] - trigonB.m_triangle3d.data[j];
 			if (!isTwoSegmentsIntersect(segm2A, segm2B, toleDist))
 				continue;
 			double precision = 0;
@@ -176,36 +177,30 @@ __device__ FrontState isFrontJudgeOfTrigon(const cuda::TrigonPart& trigonA, cons
 				continue; //means collieanr in 3d
 			Eigen::Vector3d pd = trigonA.m_triangle3d.data[i] - trigonB.m_triangle3d.data[j];
 			precision = max(max(fabs(pd[0]), fabs(pd[1])), fabs(pd[2]));
-			if (toleFixed < precision) //pd approx zero vector
-			{
-				normal.normalize();
-				double d = 0.0 < normal.z() ? 1.0 : -1.0;
-				d *= normal.dot(pd); //the projection difference of two segment
-				if (precision * toleFixed < fabs(d))
-					return 0.0 < d ? FrontState::A_FRONTOF : FrontState::B_FRONTOF;
-			}
+			if (precision < toleFixed) //pd approx zero vector
+				continue;
+			normal.normalize();
+			double d = 0.0 < normal.z() ? 1.0 : -1.0;
+			d *= normal.dot(pd); //the projection difference of two segment
+			if (precision * toleFixed < fabs(d))
+				return 0.0 < d ? FrontState::A_FRONTOF : FrontState::B_FRONTOF;
 		}
 	}
 	return FrontState::UNKNOWN; //error, not intersect
 }
 
-__global__ void kernel_calculateFrontJudgeOfTrigon(cuda::TrigonPart* trigonVct, size_t n, double toleDist, double toleAngle, double toleFixed)
+__global__ void kernel_calculateFrontJudgeOfTrigon(cuda::TrigonPart* trigonVct, double toleDist, double toleAngle, double toleFixed)
 {
-	int i = threadIdx.x;
+	int i = blockIdx.x * blockDim.x + threadIdx.x;
 	TrigonPart& trigonA = trigonVct[i];
     for (size_t j = 0; j < trigonA.m_occ_size; ++j)
     {
-		if (n <= trigonA.m_occ_ptr[j])
-		{
-			trigonA.m_occ_ptr[j] = -1;
-			continue;
-		}
         const TrigonPart& trigonB = trigonVct[trigonA.m_occ_ptr[j]];
         if (trigonB.m_visible == OcclusionState::HIDDEN ||
             trigonB.m_box3d.max().z() < trigonA.m_box3d.min().z() ||
             !isTwoTrianglesIntersectSAT(trigonA.m_triangle2d, trigonB.m_triangle2d))
         {
-			trigonA.m_occ_ptr[j] = -1;
+			trigonA.m_occ_ptr[j] = -1; //means not shield
             continue;
         }
         if (FrontState::B_FRONTOF == isFrontJudgeOfTrigon(trigonA, trigonB, toleDist, toleAngle, toleFixed))
@@ -213,13 +208,16 @@ __global__ void kernel_calculateFrontJudgeOfTrigon(cuda::TrigonPart* trigonVct, 
             if (isTriangleInsideTriangleOther(trigonA, trigonB, toleDist)) //only judge and change trigonA
             {
                 trigonA.m_visible = OcclusionState::HIDDEN;
+				// record this, reset all other
+                for (size_t k = j + 1; k < trigonA.m_occ_size; ++k)
+					trigonA.m_occ_ptr[k] = -1;
                 break;
             }
             trigonA.m_visible = OcclusionState::SHIELDED;
             //trigonA.m_shielded.push_back(trigonB.m_index);
 			continue;
 		}
-		//unknown
+		// else
 		trigonA.m_occ_ptr[j] = -1;
     }
 }
@@ -227,12 +225,12 @@ __global__ void kernel_calculateFrontJudgeOfTrigon(cuda::TrigonPart* trigonVct, 
 int cuda::calculateFrontJudgeOfTrigon(std::vector<eigen::TrigonPart>& trigonVct, double toleDist, double toleAngle, double toleFixed)
 {
 	cuda::TrigonPart* device;
-	size_t size = sizeof(TrigonPart) + 4 * sizeof(double);
+    size_t size = trigonVct.size() * sizeof(TrigonPart) + 4 * sizeof(double);
 	std::vector<cuda::TrigonPart> trigonCuda(trigonVct.size());
 	for (int i = 0; i < trigonVct.size(); i++)
 	{
 		cuda::TrigonPart& trigon = trigonCuda[i];
-		trigon.m_index = (int)trigonVct[i].m_index;
+		trigon.m_index = trigonVct[i].m_index;
         trigon.m_visible = trigonVct[i].m_visible;
         trigon.m_box3d = trigonVct[i].m_box3d;
         trigon.m_box2d = trigonVct[i].m_box2d;
@@ -242,6 +240,7 @@ int cuda::calculateFrontJudgeOfTrigon(std::vector<eigen::TrigonPart>& trigonVct,
 		trigon.m_occ_size = trigonVct[i].m_preInter.size();
 		trigon.m_occ_ptr = trigonVct[i].m_preInter.data();
 		size += sizeof(int) * trigon.m_occ_size;
+		//trigonVct[i].m_visible = OcclusionState::USING_CUDA;
 	}
 	cudaMallocManaged(&device, size); //shared memory
 	//for (int i = 0; i < trigonVct.size(); ++i)
@@ -265,7 +264,7 @@ int cuda::calculateFrontJudgeOfTrigon(std::vector<eigen::TrigonPart>& trigonVct,
 		cudaMemcpy(device[i].m_occ_ptr, trigonCuda[i].m_occ_ptr, count, cudaMemcpyHostToDevice);
 	}
 	//kernelName<<< grid_size, block_size >>>( ... );
-	kernel_calculateFrontJudgeOfTrigon << <1, trigonVct.size() >> > (device, trigonVct.size(), toleDist, toleAngle, toleFixed);
+	kernel_calculateFrontJudgeOfTrigon << <1, trigonVct.size() >> > (device, toleDist, toleAngle, toleFixed);
 	cudaDeviceSynchronize();
 	//cudaMemcpy(trigonVct.data(), device, size, cudaMemcpyDeviceToHost);
 	//copy out
@@ -277,6 +276,14 @@ int cuda::calculateFrontJudgeOfTrigon(std::vector<eigen::TrigonPart>& trigonVct,
 		if (count == 0)
 			continue;
 		cudaMemcpy(trigonCuda[i].m_occ_ptr, device[i].m_occ_ptr, count, cudaMemcpyDeviceToHost);
+		//bool exposed = true; // specially assign EXPOSED
+		for (int j = 0; j < trigonVct[i].m_preInter.size(); j++)
+		{
+			if (trigonVct[i].m_preInter[j] != -1)
+				trigonVct[i].m_shielded.push_back(trigonVct[i].m_preInter[j]);
+		}
+		if (!trigonVct[i].m_shielded.empty())
+			trigonVct[i].m_visible = OcclusionState::SHIELDED;
 		//cudaFree(&device[i]);
 	}
 	cudaFree(device);
